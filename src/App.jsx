@@ -1396,7 +1396,7 @@ const LEGAL_DOCS = {
     sections: [
       {
         num: "1", heading: "Acceptance of Terms",
-        body: "By downloading, accessing, or using the furnish. mobile application and platform ("Service"), you agree to be bound by these Terms of Service. If you do not agree, you are prohibited from using this Service. Furnish Technologies, Inc. ("we", "us") reserves the right to modify these Terms at any time with notice via the Platform or email.",
+        body: `By downloading, accessing, or using the furnish. mobile application and platform ("Service"), you agree to be bound by these Terms of Service. If you do not agree, you are prohibited from using this Service. Furnish Technologies, Inc. ("we", "us") reserves the right to modify these Terms at any time with notice via the Platform or email.`,
       },
       {
         num: "2", heading: "Eligibility & Account Registration",
