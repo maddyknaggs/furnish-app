@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ─── DATA ─────────────────────────────────────────────────────────
 const listings = [
@@ -261,30 +261,35 @@ const OnboardingFlow = ({ onComplete }) => {
             <div style={{fontSize:11,fontFamily:"sans-serif",fontWeight:700,color:"#8A6A5A",textTransform:"uppercase",marginBottom:6}}>Mobile Number (US)</div>
             <div style={{display:"flex",gap:10}}>
               <div style={{background:"#F5EDE4",borderRadius:12,padding:"13px 14px",fontFamily:"sans-serif",fontSize:15,color:"#6B4C3A",fontWeight:600,flexShrink:0}}>+1</div>
-              <input value={form.phone} onChange={e=>set("phone",e.target.value.replace(/\D/,"").slice(0,10))} placeholder="(404) 555-0100" style={{...inputStyle(errors.phone),flex:1}}/>
+              <input value={form.phone} onChange={e=>set("phone",e.target.value.replace(/\D/g,"").slice(0,10))} placeholder="(404) 555-0100" style={{...inputStyle(errors.phone),flex:1}}/>
             </div>
             {errors.phone&&<div style={{color:"#C46A3A",fontSize:12,marginTop:4,fontFamily:"sans-serif"}}>{errors.phone}</div>}
             <button onClick={()=>{if(validate()){setCodeSent(true);setErrors({});}}} style={{width:"100%",background:"#8B4513",color:"white",border:"none",borderRadius:12,padding:14,fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,cursor:"pointer",marginTop:20}}>
               Send Verification Code
             </button>
+            <div style={{textAlign:"center",marginTop:16}}>
+              <span onClick={next} style={{color:"#A08070",fontFamily:"sans-serif",fontSize:13,cursor:"pointer",textDecoration:"underline"}}>Skip for now</span>
+            </div>
           </div>
         ) : (
           <div>
             <div style={{background:"#E8F5EC",borderRadius:12,padding:"12px 16px",marginBottom:20,fontFamily:"sans-serif",fontSize:13,color:"#3A7A54"}}>
-              ✓ Code sent to +1 {form.phone.replace(/(\d{3})(\d{3})(\d{4})/,"($1) $2-$3")}
+              ✓ Code sent to +1 {form.phone.replace(/(\d{3})(\d{3})(\d{4})/,"($1) $2-$3")} — for this demo, enter any 6 digits
             </div>
             <div style={{fontSize:11,fontFamily:"sans-serif",fontWeight:700,color:"#8A6A5A",textTransform:"uppercase",marginBottom:6}}>Enter 6-Digit Code</div>
-            <input value={verifyCode} onChange={e=>setVerifyCode(e.target.value.slice(0,6))} placeholder="123456" maxLength={6} style={{...inputStyle(false),textAlign:"center",fontSize:28,letterSpacing:8,fontFamily:"'Cormorant Garamond',serif"}}/>
+            <input value={verifyCode} onChange={e=>setVerifyCode(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="123456" maxLength={6} style={{...inputStyle(false),textAlign:"center",fontSize:28,letterSpacing:8,fontFamily:"'Cormorant Garamond',serif"}}/>
             <div style={{textAlign:"center",marginTop:12,fontFamily:"sans-serif",fontSize:13,color:"#A08070"}}>
               Didn't get it? <span onClick={()=>{setCodeSent(false);setVerifyCode("");}} style={{color:"#8B4513",fontWeight:600,cursor:"pointer"}}>Resend</span>
             </div>
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:10}}>
+              <button onClick={next} disabled={verifyCode.length!==6} style={{width:"100%",background:verifyCode.length===6?"#8B4513":"#DDD0C8",color:"white",border:"none",borderRadius:12,padding:14,fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,cursor:verifyCode.length===6?"pointer":"default",transition:"background 0.2s"}}>
+                {verifyCode.length===6?"Verify & Continue →":`Enter ${6-verifyCode.length} more digit${6-verifyCode.length===1?"":"s"}`}
+              </button>
+              <button onClick={next} style={{width:"100%",background:"transparent",color:"#A08070",border:"1px solid #DDD0C8",borderRadius:12,padding:12,fontFamily:"sans-serif",fontSize:13,cursor:"pointer"}}>
+                Skip verification
+              </button>
+            </div>
           </div>
-        )}
-        <div style={{textAlign:"center",marginTop:16}}>
-          <span onClick={next} style={{color:"#A08070",fontFamily:"sans-serif",fontSize:13,cursor:"pointer",textDecoration:"underline"}}>Skip for now</span>
-        </div>
-        {codeSent&&verifyCode.length===6&&(
-          <NavButtons onNext={next} onBack={()=>{setCodeSent(false);setVerifyCode("");}} nextLabel="Verify & Continue →"/>
         )}
       </div>
     </div>,
@@ -4033,567 +4038,6 @@ const PickupScheduler = ({ item, seller, onClose, onConfirm }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 1: ONBOARDING TUTORIAL ──────────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const OnboardingTutorial = ({ onComplete }) => {
-  const [step, setStep] = useState(0);
-  const steps = [
-    {
-      icon: "🛋️", color: "#8B4513", bg: "linear-gradient(160deg,#2C1810,#8B4513)",
-      title: "Welcome to furnish.",
-      sub: "The easiest way to buy & sell furniture near you.",
-      body: "No more throwing away perfectly good furniture when you move. List in 60 seconds, find pieces within miles, and sell before your moving truck arrives.",
-      visual: "browse",
-    },
-    {
-      icon: "📸", color: "#3D6B8C", bg: "linear-gradient(160deg,#1A3A5C,#3D6B8C)",
-      title: "List in 60 Seconds",
-      sub: "Snap photos, pick a category, set your price.",
-      body: "Our AI Price Suggester analyzes thousands of local sales to recommend the perfect price — so you never undersell or price yourself out.",
-      visual: "sell",
-    },
-    {
-      icon: "💬", color: "#2E7A46", bg: "linear-gradient(160deg,#1A4A2A,#2E7A46)",
-      title: "Chat, Offer & Close",
-      sub: "Negotiate safely inside the app.",
-      body: "Message buyers directly, send counter-offers, share photos, and confirm pickup — all in one place. Payment is held in escrow until you hand over the item.",
-      visual: "chat",
-    },
-    {
-      icon: "🚚", color: "#5B4CF5", bg: "linear-gradient(160deg,#2A1A8A,#5B4CF5)",
-      title: "Moving? We've Got You.",
-      sub: "Book movers and trucks without leaving the app.",
-      body: "Compare U-Haul, Two Men and a Truck, TaskRabbit, and Lugg side by side. See instant cost estimates based on distance and item size.",
-      visual: "move",
-    },
-    {
-      icon: "📍", color: "#C46A3A", bg: "linear-gradient(160deg,#5C2010,#C46A3A)",
-      title: "Find Deals Near You",
-      sub: "Browse by neighborhood, filter by color & brand.",
-      body: "Use the Heat Map to discover furniture hotspots in your area and plan a single Saturday pickup trip across multiple sellers.",
-      visual: "map",
-    },
-  ];
-  const s = steps[step];
-  const Visuals = {
-    browse: () => (
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"0 auto",maxWidth:280}}>
-        {["sofa","chair","table","rattan"].map((type,i)=>(
-          <div key={i} style={{background:"white",borderRadius:12,overflow:"hidden",boxShadow:"0 4px 12px rgba(0,0,0,0.12)"}}>
-            <div style={{height:70}}><FurnitureIllustration type={type}/></div>
-            <div style={{padding:"6px 8px"}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:10,fontWeight:700,color:"#2C1810"}}>Great item</div>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:13,fontWeight:700,color:"#8B4513"}}>$120</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    ),
-    sell: () => (
-      <div style={{background:"white",borderRadius:16,padding:"14px 16px",maxWidth:260,margin:"0 auto",boxShadow:"0 8px 24px rgba(0,0,0,0.15)"}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:700,color:"#2C1810",marginBottom:10}}>AI Price Suggestion</div>
-        {[["Quick Sale","$180","#4CAF8A"],["Sweet Spot ⭐","$240","#8B4513"],["Top Dollar","$310","#5B4CF5"]].map(([label,price,col])=>(
-          <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",borderRadius:8,background:"#F8F3EC",marginBottom:6}}>
-            <span style={{fontFamily:"sans-serif",fontSize:11,color:"#6B4C3A"}}>{label}</span>
-            <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:700,color:col}}>{price}</span>
-          </div>
-        ))}
-      </div>
-    ),
-    chat: () => (
-      <div style={{maxWidth:260,margin:"0 auto",display:"flex",flexDirection:"column",gap:6}}>
-        {[{me:false,text:"Is the sofa still available? 😊"},{me:true,text:"Yes! Just listed this morning."},{me:false,text:"Would you take $280?"},{me:true,text:"How about $300? It's in great shape!"}].map((m,i)=>(
-          <div key={i} style={{display:"flex",justifyContent:m.me?"flex-end":"flex-start"}}>
-            <div style={{background:m.me?"#8B4513":"white",color:m.me?"white":"#2C1810",borderRadius:m.me?"14px 14px 4px 14px":"14px 14px 14px 4px",padding:"8px 12px",fontFamily:"sans-serif",fontSize:11,maxWidth:"80%",boxShadow:"0 2px 8px rgba(0,0,0,0.1)",border:m.me?"none":"1px solid #EDE8E0"}}>{m.text}</div>
-          </div>
-        ))}
-      </div>
-    ),
-    move: () => (
-      <div style={{display:"flex",flexDirection:"column",gap:8,maxWidth:260,margin:"0 auto"}}>
-        {[{icon:"🚚",name:"U-Haul",price:"$49+",col:"#E8A020"},{icon:"👷",name:"Two Men",price:"$150/hr",col:"#C0392B"},{icon:"📦",name:"Lugg",price:"$59 flat",col:"#5B4CF5"}].map(p=>(
-          <div key={p.name} style={{background:"white",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
-            <span style={{fontSize:22}}>{p.icon}</span>
-            <span style={{fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:700,color:"#2C1810",flex:1}}>{p.name}</span>
-            <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:700,color:p.col}}>{p.price}</span>
-          </div>
-        ))}
-      </div>
-    ),
-    map: () => (
-      <div style={{background:"linear-gradient(160deg,#E8F4E8,#D0E8D0)",borderRadius:16,padding:"14px",maxWidth:260,margin:"0 auto",boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
-        <div style={{position:"relative",height:120}}>
-          {[{name:"Midtown",x:50,y:45,count:14,hot:true},{name:"East ATL",x:72,y:68,count:11,hot:true},{name:"Buckhead",x:48,y:22,count:9},{name:"Decatur",x:78,y:40,count:7}].map(n=>(
-            <div key={n.name} style={{position:"absolute",left:`${n.x}%`,top:`${n.y}%`,transform:"translate(-50%,-50%)"}}>
-              <div style={{width:n.hot?36:28,height:n.hot?36:28,borderRadius:"50%",background:n.hot?"#C46A3A":"#4CAF8A",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.2)",border:"2px solid white"}}>
-                <span style={{fontFamily:"sans-serif",fontSize:10,fontWeight:700,color:"white"}}>{n.count}</span>
-              </div>
-            </div>
-          ))}
-          <div style={{position:"absolute",left:"50%",top:"47%",transform:"translate(-50%,-50%)",width:12,height:12,background:"#2196F3",borderRadius:"50%",border:"2px solid white",boxShadow:"0 0 0 3px rgba(33,150,243,0.3)"}}/>
-        </div>
-      </div>
-    ),
-  };
-  const Visual = Visuals[s.visual] || Visuals.browse;
-
-  return (
-    <div style={{minHeight:"100vh",background:s.bg,display:"flex",flexDirection:"column",maxWidth:520,margin:"0 auto",transition:"background 0.5s"}}>
-      {/* Progress dots */}
-      <div style={{display:"flex",gap:6,justifyContent:"center",paddingTop:48,paddingBottom:16}}>
-        {steps.map((_,i)=>(
-          <div key={i} onClick={()=>setStep(i)} style={{width:i===step?24:8,height:8,borderRadius:4,background:i===step?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.3)",transition:"all 0.3s",cursor:"pointer"}}/>
-        ))}
-      </div>
-
-      {/* Icon */}
-      <div style={{display:"flex",justifyContent:"center",marginBottom:20}}>
-        <div style={{width:80,height:80,background:"rgba(255,255,255,0.15)",borderRadius:24,display:"flex",alignItems:"center",justifyContent:"center",fontSize:42,boxShadow:"0 8px 24px rgba(0,0,0,0.2)"}}>
-          {s.icon}
-        </div>
-      </div>
-
-      {/* Text */}
-      <div style={{textAlign:"center",padding:"0 32px",marginBottom:28}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:"white",lineHeight:1.2,marginBottom:8}}>{s.title}</div>
-        <div style={{fontFamily:"sans-serif",fontSize:14,color:"rgba(255,255,255,0.8)",fontWeight:600,marginBottom:12}}>{s.sub}</div>
-        <div style={{fontFamily:"sans-serif",fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7}}>{s.body}</div>
-      </div>
-
-      {/* Visual */}
-      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 20px",overflow:"hidden"}}>
-        <Visual/>
-      </div>
-
-      {/* Nav */}
-      <div style={{padding:"20px 28px 48px"}}>
-        <button onClick={()=>{ if(step<steps.length-1) setStep(s=>s+1); else onComplete(); }}
-          style={{width:"100%",background:"rgba(255,255,255,0.95)",color:s.color,border:"none",borderRadius:18,padding:"16px",fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:900,cursor:"pointer",boxShadow:"0 8px 24px rgba(0,0,0,0.25)",marginBottom:10}}>
-          {step<steps.length-1?"Next →":"Get Started →"}
-        </button>
-        {step<steps.length-1&&(
-          <button onClick={onComplete} style={{width:"100%",background:"transparent",color:"rgba(255,255,255,0.65)",border:"none",padding:"8px",fontFamily:"sans-serif",fontSize:13,cursor:"pointer"}}>
-            Skip intro
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 2: NOTIFICATION TOAST SYSTEM ────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const useNotificationToasts = () => {
-  const [toasts, setToasts] = useState([]);
-  const addToast = (notif) => {
-    const id = Date.now();
-    setToasts(p => [...p, { ...notif, id }]);
-    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 4500);
-  };
-  const removeToast = (id) => setToasts(p => p.filter(t => t.id !== id));
-  return { toasts, addToast, removeToast };
-};
-
-const ToastContainer = ({ toasts, onRemove, onOpen }) => (
-  <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:520,zIndex:2000,pointerEvents:"none",padding:"12px 14px 0",display:"flex",flexDirection:"column",gap:8}}>
-    {toasts.map(t => (
-      <div key={t.id} style={{background:"white",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 32px rgba(30,15,5,0.18)",border:`1.5px solid ${t.color||"#8B4513"}30`,pointerEvents:"all",animation:"slideDown 0.35s cubic-bezier(0.34,1.56,0.64,1)"}}
-        onClick={()=>{onRemove(t.id);if(onOpen)onOpen(t);}}>
-        <div style={{width:40,height:40,background:(t.color||"#8B4513")+"18",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{t.icon||"🔔"}</div>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:700,color:"#2C1810",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
-          <div style={{fontFamily:"sans-serif",fontSize:11,color:"#8A7A6A",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.body}</div>
-        </div>
-        <button onClick={e=>{e.stopPropagation();onRemove(t.id);}} style={{background:"#F5EDE4",border:"none",borderRadius:"50%",width:24,height:24,cursor:"pointer",fontSize:13,color:"#8B4513",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
-      </div>
-    ))}
-  </div>
-);
-
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 3: MAP VIEW TOGGLE ──────────────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const MapView = ({ listings, onViewItem }) => {
-  const [selected, setSelected] = useState(null);
-  // Atlanta lat/lng bounding box
-  const minLat=33.70, maxLat=33.96, minLng=-84.57, maxLng=-84.28;
-  const toX = lng => ((lng-minLng)/(maxLng-minLng))*100;
-  const toY = lat => ((maxLat-lat)/(maxLat-minLat))*100;
-  // Pseudo-coordinates per listing using distanceMi as seed
-  const getCoords = (l) => {
-    const seed = l.id * 137.508;
-    const lat = 33.748 + (Math.sin(seed)*0.12);
-    const lng = -84.388 + (Math.cos(seed)*0.14);
-    return { lat, lng };
-  };
-  const sel = selected ? listings.find(l=>l.id===selected) : null;
-
-  return (
-    <div style={{position:"relative",height:"calc(100vh - 160px)",background:"#E8F0E8",overflow:"hidden"}}>
-      {/* Stylized map background */}
-      <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.25}} viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
-        <rect width="400" height="600" fill="#D8E8D0"/>
-        {/* Roads */}
-        {[[0,300,400,300],[200,0,200,600],[0,150,400,420],[50,0,350,600],[0,450,400,180]].map(([x1,y1,x2,y2],i)=>(
-          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#B8CCB0" strokeWidth={i<2?4:2}/>
-        ))}
-        {/* Parks */}
-        <rect x="60" y="200" width="80" height="60" rx="8" fill="#A8C8A0" opacity="0.6"/>
-        <rect x="260" y="350" width="60" height="80" rx="8" fill="#A8C8A0" opacity="0.6"/>
-        {/* Water */}
-        <path d="M0 480 Q100 460 200 480 Q300 500 400 480 L400 600 L0 600Z" fill="#B0D0E8" opacity="0.4"/>
-      </svg>
-
-      {/* Listing pins */}
-      {listings.map(l => {
-        const {lat,lng} = getCoords(l);
-        const x = toX(lng); const y = toY(lat);
-        const isSel = selected===l.id;
-        return (
-          <div key={l.id} onClick={()=>setSelected(isSel?null:l.id)} style={{
-            position:"absolute", left:`${x}%`, top:`${y}%`,
-            transform:"translate(-50%,-100%)", cursor:"pointer", zIndex:isSel?10:1,
-            transition:"transform 0.2s", filter:isSel?"drop-shadow(0 4px 8px rgba(0,0,0,0.3))":"none",
-          }}>
-            <div style={{
-              background:l.sold?"#A0A0A0":isSel?"#2C1810":"#8B4513",
-              color:"white", borderRadius:"12px 12px 12px 2px",
-              padding:"5px 8px", fontFamily:"'Cormorant Garamond',serif",
-              fontSize:13, fontWeight:700, whiteSpace:"nowrap",
-              boxShadow:"0 2px 8px rgba(0,0,0,0.2)",
-              border:`2px solid ${isSel?"#C4703A":"rgba(255,255,255,0.4)"}`,
-              transition:"all 0.2s",
-            }}>
-              ${l.price}
-            </div>
-            <div style={{width:0,height:0,borderLeft:"6px solid transparent",borderRight:"6px solid transparent",borderTop:`8px solid ${l.sold?"#A0A0A0":isSel?"#2C1810":"#8B4513"}`,margin:"0 auto"}}/>
-          </div>
-        );
-      })}
-
-      {/* You are here dot */}
-      <div style={{position:"absolute",left:"50%",top:"54%",transform:"translate(-50%,-50%)",zIndex:5}}>
-        <div style={{width:14,height:14,background:"#2196F3",borderRadius:"50%",border:"2px solid white",boxShadow:"0 0 0 5px rgba(33,150,243,0.25)"}}/>
-        <div style={{fontFamily:"sans-serif",fontSize:8,color:"#1565C0",fontWeight:700,textAlign:"center",marginTop:2,whiteSpace:"nowrap",background:"rgba(255,255,255,0.85)",borderRadius:4,padding:"1px 4px"}}>You</div>
-      </div>
-
-      {/* Selected item card */}
-      {sel && (
-        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"white",borderRadius:"20px 20px 0 0",padding:"16px 18px 24px",boxShadow:"0 -8px 24px rgba(30,15,5,0.15)",zIndex:20}}>
-          <div style={{display:"flex",gap:12,alignItems:"center"}}>
-            <div style={{width:60,height:60,borderRadius:10,overflow:"hidden",flexShrink:0}}>
-              <FurnitureIllustration type={sel.img} sold={sel.sold}/>
-            </div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"sans-serif",fontSize:10,fontWeight:700,color:"#A08070",textTransform:"uppercase",letterSpacing:0.4}}>{sel.brand}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#2C1810",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sel.title}</div>
-              <div style={{display:"flex",gap:6,marginTop:4,alignItems:"center"}}>
-                <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,fontWeight:700,color:"#8B4513"}}>${sel.price}</span>
-                <span style={{background:conditionColor[sel.condition]+"20",color:conditionColor[sel.condition],fontSize:10,fontWeight:600,padding:"1px 7px",borderRadius:10,fontFamily:"sans-serif"}}>{sel.condition}</span>
-                <span style={{fontFamily:"sans-serif",fontSize:11,color:"#A08070"}}>📍 {sel.distance}</span>
-              </div>
-            </div>
-            <button onClick={()=>onViewItem(sel)} style={{background:"#8B4513",color:"white",border:"none",borderRadius:12,padding:"10px 16px",fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0}}>View →</button>
-          </div>
-        </div>
-      )}
-
-      {/* Count badge */}
-      <div style={{position:"absolute",top:12,left:"50%",transform:"translateX(-50%)",background:"rgba(255,255,255,0.92)",borderRadius:20,padding:"5px 14px",boxShadow:"0 2px 8px rgba(0,0,0,0.12)",fontFamily:"sans-serif",fontSize:12,fontWeight:600,color:"#2C1810"}}>
-        {listings.length} items near you
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 4: LISTING ANALYTICS ────────────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const LISTING_ANALYTICS = {
-  1: { views:47, saves:12, inquiries:3, offers:1, viewsTrend:[4,7,12,8,6,9,11], pctAboveAvg:8,  competScore:78, daysLive:3  },
-  2: { views:31, saves:7,  inquiries:2, offers:0, viewsTrend:[3,5,8,4,5,4,2],  pctAboveAvg:-12, competScore:62, daysLive:5  },
-  3: { views:89, saves:22, inquiries:7, offers:3, viewsTrend:[8,14,18,12,15,13,9],pctAboveAvg:24,competScore:91, daysLive:2  },
-  4: { views:63, saves:18, inquiries:5, offers:2, viewsTrend:[6,10,14,9,11,8,5], pctAboveAvg:15, competScore:85, daysLive:4  },
-  6: { views:28, saves:5,  inquiries:1, offers:0, viewsTrend:[2,4,6,3,5,5,3],   pctAboveAvg:-5,  competScore:55, daysLive:6  },
-};
-
-const ListingAnalytics = ({ item, onClose }) => {
-  const stats = LISTING_ANALYTICS[item.id] || { views:12,saves:3,inquiries:1,offers:0,viewsTrend:[1,2,3,2,1,2,1],pctAboveAvg:0,competScore:60,daysLive:1 };
-  const maxBar = Math.max(...stats.viewsTrend);
-  const days   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  const priceStatus = stats.pctAboveAvg > 0 ? "above" : stats.pctAboveAvg < 0 ? "below" : "at";
-  const priceStatusColor = stats.pctAboveAvg > 15 ? "#C46A3A" : stats.pctAboveAvg > 0 ? "#E8A020" : "#4CAF8A";
-  const scoreColor = stats.competScore >= 80 ? "#4CAF8A" : stats.competScore >= 60 ? "#E8A020" : "#C46A3A";
-
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(20,10,5,0.72)",zIndex:1500,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(5px)"}} onClick={onClose}>
-      <div style={{background:"#FDFAF7",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:520,maxHeight:"90vh",display:"flex",flexDirection:"column",boxShadow:"0 -16px 60px rgba(30,15,5,0.3)"}} onClick={e=>e.stopPropagation()}>
-
-        {/* Header */}
-        <div style={{background:"linear-gradient(135deg,#2C1810,#5C3A20)",padding:"18px 22px 16px",borderRadius:"24px 24px 0 0",flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-            <div style={{width:48,height:48,borderRadius:10,overflow:"hidden",flexShrink:0}}>
-              <FurnitureIllustration type={item.img} small/>
-            </div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"white",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</div>
-              <div style={{fontFamily:"sans-serif",fontSize:11,color:"rgba(255,255,255,0.65)"}}>Listed {stats.daysLive} day{stats.daysLive!==1?"s":""} ago · ${item.price}</div>
-            </div>
-            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:"50%",width:30,height:30,color:"white",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
-          </div>
-        </div>
-
-        <div style={{overflowY:"auto",flex:1,padding:"18px 20px 28px"}}>
-
-          {/* KPI row */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
-            {[
-              {icon:"👁️",label:"Views",    val:stats.views,      color:"#3D6B8C"},
-              {icon:"❤️",label:"Saves",    val:stats.saves,      color:"#C46A3A"},
-              {icon:"💬",label:"Messages", val:stats.inquiries,  color:"#2E7A46"},
-              {icon:"💰",label:"Offers",   val:stats.offers,     color:"#8B4513"},
-            ].map(k=>(
-              <div key={k.label} style={{background:"white",borderRadius:14,padding:"12px 8px",textAlign:"center",border:"1px solid #EDE8E0",boxShadow:"0 2px 8px rgba(60,30,10,0.06)"}}>
-                <div style={{fontSize:20,marginBottom:4}}>{k.icon}</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:700,color:k.color,lineHeight:1}}>{k.val}</div>
-                <div style={{fontFamily:"sans-serif",fontSize:9,color:"#A08070",textTransform:"uppercase",letterSpacing:0.3,marginTop:2}}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Views trend chart */}
-          <div style={{background:"white",borderRadius:16,padding:"16px",marginBottom:14,border:"1px solid #EDE8E0"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810"}}>Views This Week</div>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:700,color:"#3D6B8C"}}>{stats.views} total</div>
-            </div>
-            <div style={{display:"flex",alignItems:"flex-end",gap:6,height:80}}>
-              {stats.viewsTrend.map((v,i)=>{
-                const h = Math.round((v/maxBar)*100);
-                const isToday = i===stats.viewsTrend.length-1;
-                return (
-                  <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-                    {v>0&&<div style={{fontFamily:"sans-serif",fontSize:8,color:isToday?"#3D6B8C":"#B0A090",fontWeight:isToday?700:400}}>{v}</div>}
-                    <div style={{width:"100%",background:isToday?"#3D6B8C":v>0?"#C4A882":"#F0E8DC",borderRadius:"4px 4px 0 0",height:`${Math.max(h,4)}%`,minHeight:4,transition:"height 0.4s"}}/>
-                    <div style={{fontFamily:"sans-serif",fontSize:8,color:isToday?"#3D6B8C":"#A08070",fontWeight:isToday?700:400}}>{days[i]}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Price competitiveness */}
-          <div style={{background:"white",borderRadius:16,padding:"16px",marginBottom:14,border:"1px solid #EDE8E0"}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810",marginBottom:12}}>Price Competitiveness</div>
-            <div style={{position:"relative",height:8,background:"#F0E8DC",borderRadius:4,marginBottom:8}}>
-              <div style={{position:"absolute",left:`${Math.min(Math.max(50+stats.pctAboveAvg*1.2,5),92)}%`,top:-5,transform:"translateX(-50%)"}}>
-                <div style={{width:18,height:18,borderRadius:"50%",background:priceStatusColor,border:"3px solid white",boxShadow:`0 2px 6px ${priceStatusColor}60`}}/>
-              </div>
-              <div style={{position:"absolute",left:"5%",right:"5%",height:"100%",background:`linear-gradient(90deg,#4CAF8A,#E8A020,#C46A3A)`,borderRadius:4,opacity:0.4}}/>
-            </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontFamily:"sans-serif",fontSize:10,color:"#A08070",marginBottom:12}}>
-              <span>Underpriced</span><span>Market Rate</span><span>Overpriced</span>
-            </div>
-            <div style={{background:priceStatusColor+"12",borderRadius:10,padding:"10px 12px",border:`1px solid ${priceStatusColor}30`}}>
-              <div style={{fontFamily:"sans-serif",fontSize:12,color:priceStatusColor,fontWeight:700,marginBottom:3}}>
-                {stats.pctAboveAvg > 15 ? "⚠️ Priced Above Market"
-                  : stats.pctAboveAvg > 0 ? "📈 Slightly Above Average"
-                  : stats.pctAboveAvg === 0 ? "✓ At Market Rate"
-                  : "💰 Priced to Sell Fast"}
-              </div>
-              <div style={{fontFamily:"sans-serif",fontSize:11,color:"#6B4C3A",lineHeight:1.5}}>
-                Your ${item.price} is <strong>{Math.abs(stats.pctAboveAvg)}% {priceStatus}</strong> the average for {item.category} in Atlanta.
-                {stats.pctAboveAvg > 15 && " Consider lowering to $"+Math.round(item.price*0.88)+" for faster results."}
-                {stats.pctAboveAvg < -5 && " You could price higher and still sell quickly!"}
-              </div>
-            </div>
-          </div>
-
-          {/* Competition score */}
-          <div style={{background:"white",borderRadius:16,padding:"16px",marginBottom:14,border:"1px solid #EDE8E0"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810"}}>Listing Score</div>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:700,color:scoreColor}}>{stats.competScore}<span style={{fontSize:16,color:"#B0A090"}}>/100</span></div>
-            </div>
-            <div style={{height:8,background:"#F0E8DC",borderRadius:4,marginBottom:12,overflow:"hidden"}}>
-              <div style={{width:`${stats.competScore}%`,height:"100%",background:`linear-gradient(90deg,${scoreColor},${scoreColor}CC)`,borderRadius:4,transition:"width 0.6s"}}/>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {[
-                {label:"Photos",      score:item.id?90:50,  tip:"Add more photos for higher score"},
-                {label:"Description", score:item.dims?85:40, tip:"Include dimensions"},
-                {label:"Condition",   score:100,             tip:"Condition is set ✓"},
-                {label:"Price",       score:stats.competScore,tip:stats.pctAboveAvg>10?"Consider lowering slightly":"Great pricing"},
-                {label:"Response",    score:98,              tip:"Fast responses boost score"},
-              ].map(f=>(
-                <div key={f.label} style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{fontFamily:"sans-serif",fontSize:12,color:"#6B4C3A",minWidth:80}}>{f.label}</div>
-                  <div style={{flex:1,height:5,background:"#F0E8DC",borderRadius:3,overflow:"hidden"}}>
-                    <div style={{width:`${f.score}%`,height:"100%",background:f.score>=80?"#4CAF8A":f.score>=60?"#E8A020":"#C46A3A",borderRadius:3}}/>
-                  </div>
-                  <div style={{fontFamily:"sans-serif",fontSize:11,fontWeight:600,color:"#A08070",minWidth:28,textAlign:"right"}}>{f.score}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recommendations */}
-          <div style={{background:"#F5EDE4",borderRadius:16,padding:"14px 16px"}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810",marginBottom:10}}>💡 Recommendations</div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {[
-                stats.saves/stats.views < 0.15 && { icon:"📸", text:"Buyers are viewing but not saving — try better lead photos in natural light." },
-                stats.inquiries===0 && { icon:"💬", text:"No messages yet — add dimensions and a description to answer buyer questions upfront." },
-                stats.pctAboveAvg > 15 && { icon:"💰", text:`Lower to $${Math.round(item.price*0.88)} to align with market and likely sell this week.` },
-                stats.daysLive > 4 && stats.offers===0 && { icon:"🔄", text:"No offers after 4+ days — consider refreshing with new photos or a 10% price drop." },
-                !stats.inquiries && { icon:"⏰", text:"Enable push notifications so you never miss a message from an interested buyer." },
-              ].filter(Boolean).map((rec,i)=>(
-                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",background:"white",borderRadius:10,padding:"10px 12px"}}>
-                  <span style={{fontSize:18,flexShrink:0}}>{rec.icon}</span>
-                  <div style={{fontFamily:"sans-serif",fontSize:12,color:"#5C3A20",lineHeight:1.6}}>{rec.text}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 5: REVIEW PROMPT SYSTEM ─────────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const ReviewPrompt = ({ item, reviewer, role, onClose, onSubmit }) => {
-  const [rating,   setRating]   = useState(0);
-  const [hover,    setHover]    = useState(0);
-  const [text,     setText]     = useState("");
-  const [tags,     setTags]     = useState([]);
-  const [submitted,setSubmitted] = useState(false);
-  const allTags = role==="buyer"
-    ? ["Easy pickup","Item as described","Great communication","Would buy again","Fast response","Friendly seller"]
-    : ["Easy to deal with","Paid promptly","Respectful of property","No-hassle pickup","Clear communication","Reliable buyer"];
-  const toggleTag = t => setTags(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t]);
-
-  if (submitted) return (
-    <div style={{position:"fixed",inset:0,background:"rgba(20,10,5,0.72)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:24,backdropFilter:"blur(5px)"}} onClick={onClose}>
-      <div style={{background:"#FDFAF7",borderRadius:24,maxWidth:360,width:"100%",padding:"36px 28px",textAlign:"center",boxShadow:"0 30px 80px rgba(30,15,5,0.3)"}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:60,marginBottom:14}}>⭐</div>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:"#2C1810",marginBottom:8}}>Review Submitted!</div>
-        <div style={{fontFamily:"sans-serif",fontSize:13,color:"#A08070",lineHeight:1.7,marginBottom:20}}>Thank you for building trust in the furnish. community. Reviews help everyone buy and sell with confidence.</div>
-        <button onClick={onClose} style={{width:"100%",background:"#8B4513",color:"white",border:"none",borderRadius:14,padding:"13px",fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,cursor:"pointer"}}>Done ✓</button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(20,10,5,0.72)",zIndex:1500,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(5px)"}} onClick={onClose}>
-      <div style={{background:"#FDFAF7",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:520,maxHeight:"88vh",display:"flex",flexDirection:"column",boxShadow:"0 -16px 60px rgba(30,15,5,0.3)"}} onClick={e=>e.stopPropagation()}>
-        <div style={{background:"linear-gradient(135deg,#5C3A20,#8B4513)",padding:"18px 22px 14px",borderRadius:"24px 24px 0 0",flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:26}}>⭐</span>
-            <div style={{flex:1}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:"white"}}>Leave a Review</div>
-              <div style={{fontFamily:"sans-serif",fontSize:11,color:"rgba(255,255,255,0.7)"}}>How was your {role==="buyer"?"purchase from":"sale to"} {reviewer}?</div>
-            </div>
-            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:"50%",width:30,height:30,color:"white",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
-          </div>
-        </div>
-
-        <div style={{overflowY:"auto",flex:1,padding:"20px 22px"}}>
-          {/* Item reference */}
-          <div style={{background:"white",borderRadius:12,padding:"10px 14px",marginBottom:18,border:"1px solid #EDE8E0",display:"flex",gap:10,alignItems:"center"}}>
-            <div style={{width:44,height:44,borderRadius:8,overflow:"hidden",flexShrink:0}}><FurnitureIllustration type={item?.img||"sofa"} small/></div>
-            <div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:700,color:"#2C1810"}}>{item?.title||"Furniture Item"}</div>
-              <div style={{fontFamily:"sans-serif",fontSize:11,color:"#A08070"}}>Transaction with {reviewer}</div>
-            </div>
-          </div>
-
-          {/* Star rating */}
-          <div style={{textAlign:"center",marginBottom:20}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#2C1810",marginBottom:12}}>
-              {rating===0?"Tap to rate":rating===1?"😞 Poor":rating===2?"😐 Fair":rating===3?"🙂 Good":rating===4?"😊 Great":"🤩 Excellent!"}
-            </div>
-            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-              {[1,2,3,4,5].map(s=>(
-                <div key={s} onMouseEnter={()=>setHover(s)} onMouseLeave={()=>setHover(0)} onClick={()=>setRating(s)}
-                  style={{fontSize:40,cursor:"pointer",transition:"transform 0.15s",transform:hover>=s||rating>=s?"scale(1.15)":"scale(1)",filter:hover>=s||rating>=s?"none":"grayscale(100%) opacity(0.3)"}}>⭐</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick tags */}
-          {rating>0&&(
-            <div style={{marginBottom:16}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810",marginBottom:10}}>Quick Tags</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                {allTags.map(t=>(
-                  <button key={t} onClick={()=>toggleTag(t)} style={{background:tags.includes(t)?"#8B4513":"#F5EDE4",color:tags.includes(t)?"white":"#6B4C3A",border:`1.5px solid ${tags.includes(t)?"#8B4513":"transparent"}`,borderRadius:20,padding:"6px 14px",fontFamily:"sans-serif",fontSize:12,fontWeight:tags.includes(t)?700:400,cursor:"pointer",transition:"all 0.15s"}}>
-                    {tags.includes(t)?"✓ ":""}{t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Written review */}
-          {rating>0&&(
-            <div style={{marginBottom:8}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#2C1810",marginBottom:8}}>Write a Review <span style={{fontFamily:"sans-serif",fontSize:11,color:"#A08070",fontWeight:400}}>(optional)</span></div>
-              <textarea value={text} onChange={e=>setText(e.target.value)} rows={3}
-                placeholder={`Share your experience with ${reviewer}...`}
-                style={{width:"100%",border:"1.5px solid #DDD0C8",borderRadius:12,padding:"11px 14px",fontFamily:"sans-serif",fontSize:13,color:"#2C1810",resize:"none",outline:"none",boxSizing:"border-box",lineHeight:1.6}}/>
-              <div style={{fontFamily:"sans-serif",fontSize:10,color:"#B0A090",marginTop:4,textAlign:"right"}}>{text.length}/300</div>
-            </div>
-          )}
-        </div>
-
-        <div style={{padding:"12px 22px 32px",borderTop:"1px solid #EDE8E0",flexShrink:0}}>
-          <button onClick={()=>{ if(rating>0) setSubmitted(true); }} disabled={rating===0}
-            style={{width:"100%",background:rating>0?"#8B4513":"#DDD0C8",color:"white",border:"none",borderRadius:14,padding:"14px",fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,cursor:rating>0?"pointer":"not-allowed"}}>
-            {rating===0?"Select a rating to continue":"Submit Review →"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
-// ─── FEATURE 6: DARK MODE ────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════
-
-const useDarkMode = () => {
-  const [dark, setDark] = useState(false);
-  const toggle = () => setDark(d => !d);
-  const t = (light, darkVal) => dark ? darkVal : light;
-  return { dark, toggle, t };
-};
-
-const DM = {
-  bg:          (d) => d ? "#1A1208" : "#F8F3EC",
-  card:        (d) => d ? "#2C1E10" : "white",
-  cardBorder:  (d) => d ? "#4A3020" : "#EDE8E0",
-  header:      (d) => d ? "#1E1208" : "white",
-  text:        (d) => d ? "#F0E8D8" : "#2C1810",
-  subtext:     (d) => d ? "#C0A880" : "#A08070",
-  muted:       (d) => d ? "#806050" : "#B0A090",
-  pill:        (d) => d ? "#3A2510" : "#F5EDE4",
-  pillText:    (d) => d ? "#D4A882" : "#6B4C3A",
-  input:       (d) => d ? "#261808" : "#FAF7F4",
-  inputBorder: (d) => d ? "#4A3020" : "#EDE8E0",
-  accent:      ()  => "#8B4513",
-  accentLight: (d) => d ? "#5C2D0A" : "#F5EDE4",
-};
-
 // ─── FILTER DRAWER ───────────────────────────────────────────────
 const FilterDrawer = ({ filters, setFilters, onClose, resultCount }) => {
   const [local, setLocal] = useState({ ...filters });
@@ -4769,30 +4213,15 @@ const ACTIVE_FILTER_LABELS = {
 // ─── MAIN APP ─────────────────────────────────────────────────────
 const categories = ["All","Sofas","Tables","Chairs","Beds","Storage"];
 
-const MainApp = ({ dark=false, toggleDark }) => {
-  const [activeTab,        setActiveTab]        = useState("browse");
-  const [selectedCat,      setSelectedCat]      = useState("All");
-  const [selectedItem,     setSelectedItem]     = useState(null);
-  const [showSell,         setShowSell]         = useState(false);
-  const [search,           setSearch]           = useState("");
-  const [filters,          setFilters]          = useState({ ...DEFAULT_FILTERS });
-  const [showFilters,      setShowFilters]      = useState(false);
-  const [showNotifs,       setShowNotifs]       = useState(false);
-  const [viewMode,         setViewMode]         = useState("grid"); // grid | map
-  const [showAnalytics,    setShowAnalytics]    = useState(null);  // listing item
-  const [showReview,       setShowReview]       = useState(null);  // { item, reviewer, role }
-  const [showHeatMap,      setShowHeatMap]      = useState(false);
-  const { toasts, addToast, removeToast }       = useNotificationToasts();
-
-  // Simulate live notification arriving after 3 seconds
-  useEffect(()=>{
-    const t = setTimeout(()=>addToast({
-      icon:"💰", color:"#8B4513",
-      title:"New Offer Received",
-      body:"Maya R. offered $300 on your Mid-Century Walnut Sofa",
-    }), 3000);
-    return ()=>clearTimeout(t);
-  }, []);
+const MainApp = () => {
+  const [activeTab, setActiveTab] = useState("browse");
+  const [selectedCat, setSelectedCat] = useState("All");
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showSell, setShowSell] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [showFilters, setShowFilters] = useState(false);
+  const [showNotifs, setShowNotifs]   = useState(false);
 
   const filtered = applyFilters(listings, selectedCat, search, filters);
 
@@ -4821,18 +4250,13 @@ const MainApp = ({ dark=false, toggleDark }) => {
     <div style={{minHeight:"100vh",background:"#F8F3EC",fontFamily:"sans-serif",maxWidth:520,margin:"0 auto",position:"relative"}}>
       <div style={{background:"white",padding:"20px 24px 0",boxShadow:"0 2px 12px rgba(60,30,10,0.06)",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:DM.text(dark),letterSpacing:-0.5}}>furnish<span style={{color:"#8B4513"}}>.</span></div>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <span style={{fontSize:13,color:DM.subtext(dark),fontFamily:"sans-serif"}}>📍 Atlanta</span>
-            {/* Dark mode toggle */}
-            <div onClick={toggleDark} style={{width:36,height:36,background:DM.pill(dark),borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:17}}>
-              {dark?"☀️":"🌙"}
-            </div>
-            {/* Notification bell */}
-            <div onClick={()=>setShowNotifs(true)} style={{position:"relative",width:36,height:36,background:DM.pill(dark),borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18}}>
-              🔔
-              <div style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#C46A3A",borderRadius:"50%",border:"1.5px solid white"}}/>
-            </div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:"#2C1810",letterSpacing:-0.5}}>furnish<span style={{color:"#8B4513"}}>.</span></div>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <span style={{fontSize:13,color:"#A08070",fontFamily:"sans-serif"}}>📍 Atlanta</span>
+            <div onClick={()=>setShowNotifs(true)} style={{position:"relative",width:36,height:36,background:"#F5EDE4",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18}}>
+            🔔
+            <div style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#C46A3A",borderRadius:"50%",border:"1.5px solid white"}}/>
+          </div>
           </div>
         </div>
         {activeTab==="browse"&&<>
@@ -4846,16 +4270,8 @@ const MainApp = ({ dark=false, toggleDark }) => {
               {activeFilterCount>0&&<span style={{background:"white",color:"#8B4513",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900}}>{activeFilterCount}</span>}
             </button>
           </div>
-          <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:10,scrollbarWidth:"none",alignItems:"center"}}>
-            {categories.map(c=>(<button key={c} onClick={()=>setSelectedCat(c)} style={{background:selectedCat===c?"#8B4513":DM.pill(dark),color:selectedCat===c?"white":DM.pillText(dark),border:"none",borderRadius:20,padding:"7px 16px",whiteSpace:"nowrap",fontFamily:"'Playfair Display',serif",fontWeight:selectedCat===c?700:400,fontSize:13,cursor:"pointer",flexShrink:0}}>{c}</button>))}
-            {/* Map / Grid toggle */}
-            <div style={{display:"flex",gap:0,background:DM.pill(dark),borderRadius:20,padding:2,flexShrink:0,marginLeft:"auto",border:`1px solid ${DM.cardBorder(dark)}`}}>
-              {[["grid","☰"],["map","🗺"]].map(([id,icon])=>(
-                <button key={id} onClick={()=>setViewMode(id)} style={{background:viewMode===id?"#8B4513":"transparent",color:viewMode===id?"white":DM.pillText(dark),border:"none",borderRadius:18,padding:"5px 12px",fontSize:14,cursor:"pointer",transition:"all 0.15s"}}>{icon}</button>
-              ))}
-            </div>
-            {/* Heat map button */}
-            <button onClick={()=>setShowHeatMap(true)} style={{background:"#F0F8F0",border:"1px solid #C8DCC8",borderRadius:20,padding:"5px 12px",fontFamily:"sans-serif",fontSize:11,fontWeight:700,color:"#2E6A2E",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",gap:4}}>🔥 Hot Spots</button>
+          <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:10,scrollbarWidth:"none"}}>
+            {categories.map(c=>(<button key={c} onClick={()=>setSelectedCat(c)} style={{background:selectedCat===c?"#8B4513":"#F5EDE4",color:selectedCat===c?"white":"#6B4C3A",border:"none",borderRadius:20,padding:"7px 16px",whiteSpace:"nowrap",fontFamily:"'Playfair Display',serif",fontWeight:selectedCat===c?700:400,fontSize:13,cursor:"pointer",flexShrink:0}}>{c}</button>))}
           </div>
           {chips.length>0&&(
             <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:12,scrollbarWidth:"none",alignItems:"center"}}>
@@ -4947,25 +4363,14 @@ const MainApp = ({ dark=false, toggleDark }) => {
 
 // ─── ROOT ─────────────────────────────────────────────────────────
 export default function App() {
-  const [onboarded,    setOnboarded]    = useState(false);
-  const [tutorialDone, setTutorialDone] = useState(false);
-  const { dark, toggle: toggleDark }    = useDarkMode();
-
+  const [onboarded, setOnboarded] = useState(false);
   return (
-    <div style={{maxWidth:520,margin:"0 auto",background:DM.bg(dark),minHeight:"100vh"}}>
+    <div style={{maxWidth:520,margin:"0 auto"}}>
       {!onboarded
         ? <OnboardingFlow onComplete={()=>setOnboarded(true)}/>
-        : !tutorialDone
-        ? <OnboardingTutorial onComplete={()=>setTutorialDone(true)}/>
-        : <MainApp dark={dark} toggleDark={toggleDark}/>
+        : <MainApp/>
       }
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Cormorant+Garamond:wght@400;600;700&display=swap');
-        *{box-sizing:border-box;}
-        ::-webkit-scrollbar{display:none;}
-        @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
-        @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
-      `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Cormorant+Garamond:wght@400;600;700&display=swap');*{box-sizing:border-box;}::-webkit-scrollbar{display:none;}@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
     </div>
   );
 }
