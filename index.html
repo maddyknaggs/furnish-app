@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- SEO -->
+    <title>furnish. — Buy & Sell Furniture Near You</title>
+    <meta name="description" content="The easiest way to buy and sell secondhand furniture in your neighborhood. List in 60 seconds. Book movers in the app." />
+    <meta name="keywords" content="furniture, buy furniture, sell furniture, secondhand, Atlanta, moving sale, used furniture" />
+
+    <!-- Open Graph (for link previews on social / Slack / iMessage) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://furnish-app.vercel.app/" />
+    <meta property="og:title" content="furnish. — Buy & Sell Furniture Near You" />
+    <meta property="og:description" content="List your furniture in 60 seconds. Find pieces within miles. Book movers right in the app." />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="furnish. — Buy & Sell Furniture Near You" />
+    <meta property="twitter:description" content="List your furniture in 60 seconds. Find pieces within miles. Book movers right in the app." />
+
+    <!-- Mobile app appearance -->
+    <meta name="theme-color" content="#8B4513" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="furnish." />
+
+    <!-- Fonts preload for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <style>
+      /* Prevent flash of unstyled content */
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: #F8F3EC;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Global scrollbar hide */
+      * {
+        box-sizing: border-box;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      *::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
